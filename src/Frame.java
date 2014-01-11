@@ -128,11 +128,12 @@ public class Frame extends JFrame{
         }
 
         //add commmon
-        for (int i = 0; i < 9; i++){
+        for (int i = 0; i < 10; i++){
             deck.addCard(commons.get((int)(Math.random()*commons.size())));
         }
 
         deck.writeToFile(deckFile);
+        JOptionPane.showMessageDialog(this,"Pack Generated Successfully!");
     }
 
     private ArrayList<String> getList(File txt) {
