@@ -141,7 +141,7 @@ public class Frame extends JFrame{
         try {
             in = new Scanner(txt);
             while(in.hasNext()){
-                list.add(in.next());
+                list.add(in.nextLine());
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
