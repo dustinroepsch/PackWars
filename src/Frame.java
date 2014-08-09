@@ -10,36 +10,45 @@ import java.util.Scanner;
 /**
  * Created by Dustin on 1/10/14.
  */
-public class Frame extends JFrame{
+public class Frame extends JFrame {
     private JFileChooser chooser;
-    private File rareTxt,uncommonTxt,commonTxt;
+    private File rareTxt, uncommonTxt, commonTxt, mythicTxt;
     private JButton rare;
     private JButton uncommon;
     private JButton common;
     private JButton save;
-    public Frame(){
+    private JButton mythic;
+    private boolean gotFoil;
+
+    public Frame() {
         super("Pack Wars");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setSize(new Dimension(300,100));
+        this.setSize(new Dimension(1000, 100));
         this.setResizable(false);
-        this.setLayout(new BorderLayout());
-
-        JLabel headerText = new JLabel("Select the text files for each rarity");
-        this.add(headerText,BorderLayout.PAGE_START);
-
-        rare = new JButton("Rare/Mythic");
-        uncommon = new JButton("Uncommon");
-        common = new JButton("Common");
+        this.setLayout(new GridLayout(1, 0));
+        gotFoil = false;
+        mythic = new JButton("Mythic.txt");
+        rare = new JButton("Rare.txt");
+        uncommon = new JButton("Uncommon.txt");
+        common = new JButton("Common.txt");
         save = new JButton("Save to .cod");
         save.setEnabled(false);
 
-        this.add(rare,BorderLayout.LINE_START);
-        this.add(uncommon,BorderLayout.CENTER);
-        this.add(common,BorderLayout.LINE_END);
-        this.add(save,BorderLayout.PAGE_END);
+        this.add(mythic);
+        this.add(rare);
+        this.add(uncommon);
+        this.add(common);
+        this.add(save);
 
         chooser = new JFileChooser();
 
+        mythic.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mythicTxt = getFile();
+                checkReady();
+            }
+        });
         rare.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -76,64 +85,71 @@ public class Frame extends JFrame{
 
     public void makeDeck() {
         File deckFile = null;
-        while (deckFile == null){
+        while (deckFile == null) {
             int returnValue = chooser.showOpenDialog(this);
-            if (returnValue == JFileChooser.APPROVE_OPTION){
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
                 deckFile = chooser.getSelectedFile();
             }
         }
         ArrayList<String> rares = getList(rareTxt);
         ArrayList<String> commons = getList(commonTxt);
         ArrayList<String> uncommons = getList(uncommonTxt);
+        ArrayList<String> mythics = getList(mythicTxt);
 
         Deck deck = new Deck();
 
         //add land/foil
-        switch ((int)(Math.random()*6)){
-            case(1):
+        switch ((int) (Math.random() * 6)) {
+            case (1):
                 deck.addCard("Island");
                 break;
-            case(2):
+            case (2):
                 deck.addCard("Mountain");
                 break;
-            case(3):
+            case (3):
                 deck.addCard("Swamp");
                 break;
-            case(4):
+            case (4):
                 deck.addCard("Plains");
                 break;
-            case(5):
+            case (5):
                 deck.addCard("Forest");
                 break;
             default:
-                int foilType = (int)(Math.random()*3);
-                switch(foilType){
-                    case(0):
-                        deck.addCard(rares.get((int)(Math.random()*rares.size())));
-                        break;
-                    case(1):
-                        deck.addCard(commons.get((int) (Math.random() * commons.size())));
-                        break;
-                    default:
-                        deck.addCard(uncommons.get((int)(Math.random()*uncommons.size())));
+                gotFoil = true;
+                double randomDec = Math.random();
+
+                if (randomDec < .5) {
+                    deck.addCard(commons.get((int) (Math.random() * commons.size())));
+                } else if (randomDec < .83) {
+                    deck.addCard(uncommons.get((int) (Math.random() * uncommons.size())));
+                } else if (randomDec < .98) {
+                    deck.addCard(rares.get((int) (Math.random() * rares.size())));
+                } else {
+                    deck.addCard(mythics.get((int) (Math.random() * mythics.size())));
                 }
+
         }
 
         //add rare/mythic
-        deck.addCard(rares.get((int)(Math.random()*rares.size())));
+        if (Math.random() < .125) {
+            deck.addCard(mythics.get((int) (Math.random() * mythics.size())));
+        } else {
+            deck.addCard(rares.get((int) (Math.random() * rares.size())));
+        }
 
         //add uncommons
-        for (int i = 0; i < 3; i++){
-            deck.addCard(uncommons.get((int)(Math.random()*uncommons.size())));
+        for (int i = 0; i < 3; i++) {
+            deck.addCard(uncommons.get((int) (Math.random() * uncommons.size())));
         }
 
         //add commmon
-        for (int i = 0; i < 10; i++){
-            deck.addCard(commons.get((int)(Math.random()*commons.size())));
+        for (int i = 0; i < (gotFoil ? 10 : 11); i++) {
+            deck.addCard(commons.get((int) (Math.random() * commons.size())));
         }
 
         deck.writeToFile(deckFile);
-        JOptionPane.showMessageDialog(this,"Pack Generated Successfully!");
+        JOptionPane.showMessageDialog(this, "Pack Generated Successfully!");
     }
 
     private ArrayList<String> getList(File txt) {
@@ -141,14 +157,13 @@ public class Frame extends JFrame{
         Scanner in = null;
         try {
             in = new Scanner(txt);
-            while(in.hasNext()){
+            while (in.hasNext()) {
                 list.add(in.nextLine());
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-        }
-        finally {
-            if (in != null){
+        } finally {
+            if (in != null) {
                 in.close();
             }
         }
@@ -156,25 +171,24 @@ public class Frame extends JFrame{
     }
 
     public void checkReady() {
-        if (rareTxt != null && commonTxt != null && uncommonTxt != null){
+        if (rareTxt != null && commonTxt != null && uncommonTxt != null && mythicTxt != null) {
             save.setEnabled(true);
         }
     }
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
         Frame frame = new Frame();
         frame.setVisible(true);
     }
-    public File getFile(){
+
+    public File getFile() {
         File file = null;
-        while (file == null){
-            int returnValue = chooser.showOpenDialog(this);
+        int returnValue = chooser.showOpenDialog(this);
 
-            if (returnValue == JFileChooser.APPROVE_OPTION){
-                file = chooser.getSelectedFile();
-            }
-
+        if (returnValue == JFileChooser.APPROVE_OPTION) {
+            file = chooser.getSelectedFile();
         }
+
         return file;
     }
 }
